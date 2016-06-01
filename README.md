@@ -142,3 +142,87 @@ The vpaid event data if passed from the vpaid event otherwise null.
    
 }
 ```
+
+EDIT THIS:
+In VPAIDEvent.as:
+public class VPAIDEvent extends Event
+	{
+		public static const AdLoaded:String = "dvAdLoaded";
+		public static const AdStarted:String = "dvAdStarted";
+		public static const AdStopped:String = "dvAdStopped";
+		public static const AdLinearChange:String = "dvAdLinearChange";
+		public static const AdExpandedChange:String = "dvAdExpandedChange";
+		public static const AdVolumeChange:String = "dvAdVolumeChange";
+		public static const AdImpression:String = "dvAdImpression";
+		public static const AdVideoStart:String = "dvAdVideoStart";
+		public static const AdVideoFirstQuartile:String = "dvAdVideoFirstQuartile";
+		public static const AdVideoMidpoint:String = "dvAdVideoMidpoint";
+		public static const AdVideoThirdQuartile:String = "dvAdVideoThirdQuartile";
+		public static const AdVideoComplete:String = "dvAdVideoComplete";
+		public static const AdClickThru:String = "dvAdClickThru";
+		public static const AdUserAcceptInvitation:String = "dvAdUserAcceptInvitation";
+		public static const AdUserMinimize:String = "dvAdUserMinimize";
+		public static const AdUserClose:String = "dvAdUserClose";
+		public static const AdPaused:String = "dvAdPaused";
+		public static const AdPlaying:String = "dvAdPlaying";
+		public static const AdLog:String = "dvAdLog";
+		public static const AdError:String = "dvAdError";
+		
+		// Additional VPAID 2.x events
+		public static const AdSkipped:String = "dvAdSkipped";
+		public static const AdSkippableStateChange:String = "dvAdSkippableStateChange";
+		public static const AdSizeChange:String = "dvAdSizeChange";
+		public static const AdDurationChange:String = "dvAdDurationChange";
+		public static const AdInteraction:String = "dvAdInteraction";
+		
+		
+		private var _data:Object;
+		
+		public function VPAIDEvent(type:String, data:Object = null, bubbles:Boolean = false, cancelable:Boolean = false)
+		{
+			super(type, bubbles, cancelable);
+			_data = data;
+		}
+		
+		public function get data():Object
+		{
+			return _data;
+		}
+	}
+	
+}
+
+
+In OVVAsset.as:
+public function handleVpaidEvent(event:Event):void
+		{
+			var ovvData:OVVCheck = checkViewability();
+
+			switch(event.type){
+				case VPAIDEvent.AdVideoComplete:
+					// stop time on ad completion
+					if(_intervalTimer != null){
+						_intervalTimer.stop();
+						_intervalTimer.removeEventListener(TimerEvent.TIMER, onIntervalCheck);
+						_intervalTimer = null;
+					}
+					break;
+				case VPAIDEvent.AdImpression:
+					adStarted = true;
+					if ( jsReady ) {
+						startImpressionTimer();
+					}
+					break;
+				case VPAIDEvent.AdPaused:
+					_isPaused = true;
+					break;
+				case VPAIDEvent.AdPlaying:
+					_isPaused = false;
+					break;
+				default:
+					// do nothing
+					break;
+			}
+
+			publishToJavascript(event.type.slice(2), getEventData(event), ovvData);
+		}
